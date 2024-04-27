@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chatbot</title>
+</head>
+<body>
+    <h2>Chatbot Interface</h2>
+    <textarea id="chatLog" cols="100" rows="20" readonly></textarea><br>
+    <input id="messageInput" type="text" style="width: 600px;">
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+        var websocket = new WebSocket("ws://localhost:6789");
+        var chatLog = document.getElementById('chatLog');
+
+        websocket.onmessage = function(event) {
+            chatLog.value += 'Bot: ' + event.data + '\n';
+        };
+
+        function sendMessage() {
+            var message = document.getElementById('messageInput').value;
+            chatLog.value += 'You: ' + message + '\n';
+            websocket.send(message);
+            document.getElementById('messageInput').value = '';
+        }
+    </script>
+</body>
+</html>
