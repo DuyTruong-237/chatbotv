@@ -2,28 +2,992 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Chatbot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
 </head>
 <body>
-    <h2>Chatbot Interface</h2>
-    <textarea id="chatLog" cols="100" rows="20" readonly></textarea><br>
-    <input id="messageInput" type="text" style="width: 600px;">
-    <button onclick="sendMessage()">Send</button>
+    <style>
+        #chatbotContainer {
+            width: 410px;
+            background-color: #f1f1f1;
+            border: 1px solid #d3d3d3;
+            position: fixed;
+            bottom: 0;
+            right: 0;
+            height: 600px;
+            border-radius: 10px;
+            z-index: 999;
+        }
+    
+        #messageInput {
+            width: 90%;
+        }
+    
+        button {
+            margin-top: 10px;
+        }
+    
+        #chatbotIcon {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 30px;
+            width: 60px;
+            height: 60px;
+            background: #f83992;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    
+        #closeBtn {
+            cursor: pointer;
+        }
+    
+        textarea {
+            width: 95%;
+        }
+    
+        #chatbotContainer .type {
+            height: 50px;
+            display: flex;
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background: white;
+            align-items: center;
+            border-radius: 0 0 10px 10px;
+        }
+    
+        #chatbotContainer .type input {
+            -webkit-box-flex: 1;
+            background: transparent;
+            border: 0;
+            -ms-flex: 1 0 0px;
+            flex: 1 0 0;
+            font-size: 16px;
+            height: 100%;
+            line-height: 20px;
+            padding: 0 20px;
+            margin: 0;
+        }
+    
+        #chatbotContainer .type .send-icon {
+            -webkit-box-flex: 0;
+            -webkit-backface-visibility: hidden;
+            cursor: pointer;
+            -ms-flex: 0 0 26px;
+            flex: 0 0 26px;
+            height: 26px;
+            -webkit-transition: all .3s;
+            transition: all .3s;
+            width: 26px;
+        }
+       
+    
+        #chatbotContainer #chatLog {
+            padding-top: 20px;
+            -webkit-box-orient: vertical;
+            -webkit-box-direction: normal;
+            -webkit-box-flex: 1;
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            -ms-flex: 1 0 0px;
+            flex: 1 0 0;
+            -ms-flex-direction: column;
+            flex-direction: column;
+            height: 70%;
+            overflow-x: hidden;
+            overflow-y: auto;
+            overscroll-behavior-y: contain;
+            width: 100%;
+        }
+    
+        #chatbotContainer #chatLog .message {
+            -webkit-box-orient: vertical;
+            -webkit-box-direction: normal;
+            -webkit-box-align: start;
+            -ms-flex-align: start;
+            align-items: flex-start;
+            -ms-flex-direction: column;
+            flex-direction: column;
+            padding: 0 25px 10px;
+            position: relative;
+        }
+    
+        #chatbotContainer #chatLog .send, #chatbotContainer #chatLog .reply {
+            word-wrap: break-word;
+            border-radius: 20px;
+            font-size: 16px;
+            line-height: 20px;
+            max-width: 90%;
+            padding: 15px 17px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+    
+        #chatbotContainer #chatLog .reply {
+            background: #ffffff;
+            color: #000000;
+        }
+    
+        #chatbotContainer #chatLog .send {
+            -webkit-box-orient: vertical;
+            -webkit-box-direction: normal;
+            -webkit-box-align: end;
+            -ms-flex-align: end;
+            align-items: flex-end;
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            -ms-flex-direction: column;
+            flex-direction: column;
+            background: #0066ff;
+            color: #000;
+            margin-left:40px;
+           
+        }
+    
+        #chatbotContainer .header {
+            background: white;
+            width: 100%;
+            display: flex;
+            height: 100px;
+            -webkit-box-align: center;
+            align-items: center;
+            border-radius: 10px 10px 0 0;
+        }
+    
+        #chatbotContainer .header .name {
+            width: 100%;
+            font-size: 25px;
+            padding-left: 20px;
+            color: black;
+        }
+    
+        #chatbotContainer .header #closeBtn {
+            background: none;
+            border: none;
+        }
+    
+        #chatbotContainer .header #closeBtn svg {
+            height: 40px;
+        }
+    
+        #chatbotContainer .header .avartar {
+            padding: 5px;
+            position: relative;
+            display: block;
+            width: 50px;
+        }
+    
+        #chatbotContainer .header .avartar img {
+            width: 100%;
+            border-radius: 100%;
+        }
+    
+        #chatbotContainer .header .avartar .status {
+            position: absolute;
+            border-radius: 100%;
+            border-style: solid;
+            border-width: 1px;
+            bottom: 20%;
+            display: block;
+            height: 16%;
+            right: 10%;
+            width: 16%;
+            border-color: #ffffff;
+            background: #69de40;
+        }
+    
+        .product {
+    border: 1px solid #d3d3d3;
+    border-radius: 10px;
+    padding: 10px;
+    width: 300px;
+    margin-left: 30px;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    position: relative;
+}
 
+.product img {
+    border-radius: 10px;
+    margin-right: 10px;
+    
+}
+
+.product .info {
+    display: flex;
+    flex-direction: column;
+    max-width: 300px;
+}
+
+.product .name {
+    font-weight: bold;
+    margin-bottom: 5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    color:#000;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: 1.2em;
+    height: 2.4em; 
+}
+
+.product .price {
+    color: #ff0000;
+    font-weight: bold;
+}
+
+.product .buttons {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    flex-direction: column;
+    gap: 5px;
+}
+
+.product .button {
+    padding: 5px 10px;
+    background-color: #0066ff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: center;
+}
+button {
+color:black;
+padding:0;
+}
+
+.product:hover .buttons {
+    display: flex;
+}
+
+    </style>
+    
+    <div id="chatbotContainer" style="display: none;">
+        <div class="header">
+            <div class="avartar">
+                <div class="status"></div>
+                <div class="image">
+                    <img src="https://cdn.chatbot.com/widget/61f28451fdd7c5000728b4f9/2A8kicyF.png" alt="Chatbot avartar"/>
+                </div>
+            </div>
+            <div class="name">Chatbot</div>
+            <button id="closeBtn">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="#5e6165"></path>
+                </svg>
+            </button>
+        </div>
+        <div id="chatLog" cols="100"></div>
+        <div class="type">
+            <input id="messageInput" type="text" maxlength="256" placeholder="Type your message here" style="color: rgb(150, 155, 166);">
+            <button onclick="startSpeechToText()"><!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Document</title>
+                </head>
+                <body>
+                    <style>
+                        #chatbotContainer {
+                            width: 410px;
+                            background-color: #f1f1f1;
+                            border: 1px solid #d3d3d3;
+                            position: fixed;
+                            bottom: 0;
+                            right: 0;
+                            height: 600px;
+                            border-radius: 10px;
+                            z-index: 999;
+                        }
+                    
+                        #messageInput {
+                            width: 90%;
+                        }
+                    
+                        button {
+                            margin-top: 10px;
+                        }
+                    
+                        #chatbotIcon {
+                            position: fixed;
+                            bottom: 20px;
+                            right: 20px;
+                            padding: 10px;
+                            cursor: pointer;
+                            border-radius: 30px;
+                            width: 60px;
+                            height: 60px;
+                            background: #f83992;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                        }
+                    
+                        #closeBtn {
+                            cursor: pointer;
+                        }
+                    
+                        textarea {
+                            width: 95%;
+                        }
+                    
+                        #chatbotContainer .type {
+                            height: 50px;
+                            display: flex;
+                            position: absolute;
+                            bottom: 0;
+                            width: 100%;
+                            background: white;
+                            align-items: center;
+                            border-radius: 0 0 10px 10px;
+                        }
+                    
+                        #chatbotContainer .type input {
+                            -webkit-box-flex: 1;
+                            background: transparent;
+                            border: 0;
+                            -ms-flex: 1 0 0px;
+                            flex: 1 0 0;
+                            font-size: 16px;
+                            height: 100%;
+                            line-height: 20px;
+                            padding: 0 20px;
+                            margin: 0;
+                        }
+                    
+                        #chatbotContainer .type .send-icon {
+                            -webkit-box-flex: 0;
+                            -webkit-backface-visibility: hidden;
+                            cursor: pointer;
+                            -ms-flex: 0 0 26px;
+                            flex: 0 0 26px;
+                            height: 26px;
+                            -webkit-transition: all .3s;
+                            transition: all .3s;
+                            width: 26px;
+                        }
+                       
+                    
+                        #chatbotContainer #chatLog {
+                            padding-top: 20px;
+                            -webkit-box-orient: vertical;
+                            -webkit-box-direction: normal;
+                            -webkit-box-flex: 1;
+                            display: -webkit-box;
+                            display: -ms-flexbox;
+                            display: flex;
+                            -ms-flex: 1 0 0px;
+                            flex: 1 0 0;
+                            -ms-flex-direction: column;
+                            flex-direction: column;
+                            height: 70%;
+                            overflow-x: hidden;
+                            overflow-y: auto;
+                            overscroll-behavior-y: contain;
+                            width: 100%;
+                        }
+                    
+                        #chatbotContainer #chatLog .message {
+                            -webkit-box-orient: vertical;
+                            -webkit-box-direction: normal;
+                            -webkit-box-align: start;
+                            -ms-flex-align: start;
+                            align-items: flex-start;
+                            -ms-flex-direction: column;
+                            flex-direction: column;
+                            padding: 0 25px 10px;
+                            position: relative;
+                        }
+                    
+                        #chatbotContainer #chatLog .send, #chatbotContainer #chatLog .reply {
+                            word-wrap: break-word;
+                            border-radius: 20px;
+                            font-size: 16px;
+                            line-height: 20px;
+                            max-width: 90%;
+                            padding: 15px 17px;
+                            white-space: pre-wrap;
+                            word-break: break-word;
+                        }
+                    
+                        #chatbotContainer #chatLog .reply {
+                            background: #ffffff;
+                            color: #000000;
+                        }
+                    
+                        #chatbotContainer #chatLog .send {
+                            -webkit-box-orient: vertical;
+                            -webkit-box-direction: normal;
+                            -webkit-box-align: end;
+                            -ms-flex-align: end;
+                            align-items: flex-end;
+                            display: -webkit-box;
+                            display: -ms-flexbox;
+                            display: flex;
+                            -ms-flex-direction: column;
+                            flex-direction: column;
+                            background: #0066ff;
+                            color: #000;
+                            margin-left:40px;
+                           
+                        }
+                    
+                        #chatbotContainer .header {
+                            background: white;
+                            width: 100%;
+                            display: flex;
+                            height: 100px;
+                            -webkit-box-align: center;
+                            align-items: center;
+                            border-radius: 10px 10px 0 0;
+                        }
+                    
+                        #chatbotContainer .header .name {
+                            width: 100%;
+                            font-size: 25px;
+                            padding-left: 20px;
+                            color: black;
+                        }
+                    
+                        #chatbotContainer .header #closeBtn {
+                            background: none;
+                            border: none;
+                        }
+                    
+                        #chatbotContainer .header #closeBtn svg {
+                            height: 40px;
+                        }
+                    
+                        #chatbotContainer .header .avartar {
+                            padding: 5px;
+                            position: relative;
+                            display: block;
+                            width: 50px;
+                        }
+                    
+                        #chatbotContainer .header .avartar img {
+                            width: 100%;
+                            border-radius: 100%;
+                        }
+                    
+                        #chatbotContainer .header .avartar .status {
+                            position: absolute;
+                            border-radius: 100%;
+                            border-style: solid;
+                            border-width: 1px;
+                            bottom: 20%;
+                            display: block;
+                            height: 16%;
+                            right: 10%;
+                            width: 16%;
+                            border-color: #ffffff;
+                            background: #69de40;
+                        }
+                    
+                        .product {
+                    border: 1px solid #d3d3d3;
+                    border-radius: 10px;
+                    padding: 10px;
+                    width: 300px;
+                    margin-left: 30px;
+                    margin-top: 10px;
+                    display: flex;
+                    align-items: center;
+                    position: relative;
+                }
+                
+                .product img {
+                    border-radius: 10px;
+                    margin-right: 10px;
+                    
+                }
+                
+                .product .info {
+                    display: flex;
+                    flex-direction: column;
+                    max-width: 300px;
+                }
+                
+                .product .name {
+                    font-weight: bold;
+                    margin-bottom: 5px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    display: -webkit-box;
+                    color:#000;
+                    -webkit-line-clamp: 2;
+                    -webkit-box-orient: vertical;
+                    line-height: 1.2em;
+                    height: 2.4em; 
+                }
+                
+                .product .price {
+                    color: #ff0000;
+                    font-weight: bold;
+                }
+                
+                .product .buttons {
+                    display: none;
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    flex-direction: column;
+                    gap: 5px;
+                }
+                
+                .product .button {
+                    padding: 5px 10px;
+                    background-color: #0066ff;
+                    color: #fff;
+                    border: none;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    text-align: center;
+                }
+                button {
+                color:black;
+                padding:0;
+                }
+                
+                .product:hover .buttons {
+                    display: flex;
+                }
+                
+                    </style>
+                    
+                    <div id="chatbotContainer" style="display: none;">
+                        <div class="header">
+                            <div class="avartar">
+                                <div class="status"></div>
+                                <div class="image">
+                                    <img src="https://cdn.chatbot.com/widget/61f28451fdd7c5000728b4f9/2A8kicyF.png" alt="Chatbot avartar"/>
+                                </div>
+                            </div>
+                            <div class="name">Chatbot</div>
+                            <button id="closeBtn">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="#5e6165"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <div id="chatLog" cols="100"></div>
+                        <div class="type">
+                            <input id="messageInput" type="text" maxlength="256" placeholder="Type your message here" style="color: rgb(150, 155, 166);">
+                            <button onclick="startSpeechToText()">void</button>
+                            <button id="toggleBtn" onclick="toggleButton(this)">V</button>
+                            <div class="send-icon" onclick="sendMessage()">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" xml:space="preserve">
+                                    <path fill="#d7d7d7" d="M22,11.7V12h-0.1c-0.1,1-17.7,9.5-18.8,9.1c-1.1-0.4,2.4-6.7,3-7.5C6.8,12.9,17.1,12,17.1,12H17c0,0,0-0.2,0-0.2c0,0,0,0,0,0c0-0.4-10.2-1-10.8-1.7c-0.6-0.7-4-7.1-3-7.5C4.3,2.1,22,10.5,22,11.7z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button id="chatbotIcon">&#x1F4AC;</button>
+                    
+                    <script>
+                        var websocket = new WebSocket("ws://localhost:6789");
+                        var chatLog = document.getElementById('chatLog');
+                        var chatbotContainer = document.getElementById('chatbotContainer');
+                        var chatbotIcon = document.getElementById('chatbotIcon');
+                    
+                        websocket.onmessage = function(event) {
+                    var response = JSON.parse(event.data);
+                    console.log(response)
+                    var messageHTML = document.createElement('div');
+                    messageHTML.classList.add('message');
+                
+                    var messageContent = document.createElement("div");
+                    messageContent.classList.add("reply");
+                    messageContent.textContent = response.message;
+                    console.log(response.message)
+                
+                    messageHTML.appendChild(messageContent);
+                    chatLog.append(messageHTML);
+                
+                    if (response.type === "product_list" && Array.isArray(response.data)) {
+                        response.data.forEach(product => {
+                            var productHTML = document.createElement('div');
+                            productHTML.classList.add('product');
+                
+                            var productLink = document.createElement('a');
+                            productLink.href = "http://localhost/e-commerce-ai/product/"+formatString(product.post_title);
+                            productLink.target = '_blank';
+                            productLink.style.display = 'flex';
+                            productLink.style.alignItems = 'center';
+                
+                            var productImage = document.createElement('img');
+                            productImage.src ="http://localhost/e-commerce-ai/wp-content/uploads/"+ product.url_img;
+                            productImage.width = 50;
+                            productImage.height = 50;
+                
+                            var productInfo = document.createElement('div');
+                            productInfo.classList.add('info');
+                
+                            var productName = document.createElement('div');
+                            productName.classList.add('name');
+                            productName.textContent = product.post_title;
+                
+                            var productPrice = document.createElement('div');
+                            productPrice.classList.add('price');
+                            productPrice.textContent = product.max_price;
+                
+                            productInfo.appendChild(productName);
+                            productInfo.appendChild(productPrice);
+                
+                            productLink.appendChild(productImage);
+                            productLink.appendChild(productInfo);
+                
+                            var buttonsDiv = document.createElement('div');
+                            buttonsDiv.classList.add('buttons');
+                
+                            // var addToCartButton = document.createElement('button');
+                            // addToCartButton.classList.add('button');
+                            // addToCartButton.textContent = 'Add to Cart';
+                
+                            // var buyNowButton = document.createElement('button');
+                            // buyNowButton.classList.add('button');
+                            // buyNowButton.textContent = 'Buy Now';
+                
+                            // buttonsDiv.appendChild(addToCartButton);
+                            // buttonsDiv.appendChild(buyNowButton);
+                
+                            productHTML.appendChild(productLink);
+                            productHTML.appendChild(buttonsDiv);
+                
+                            chatLog.append(productHTML);
+                        });
+                    }
+                    if(response.type === "redirect" )
+                    {       
+                            setTimeout(function() {
+                             window.location.href = 'http://localhost/e-commerce-ai/'+response.data+'/';
+                            }, 3000);
+                    }
+                    if (response.type === "add success" && Array.isArray(response.data))
+                    {
+                        
+                        response.data.forEach(product => {
+                            let details = extractDetails(product.post_excerpt);
+                        color= details.color;
+                        size=details.size;
+                
+                            $.ajax({
+                      url: 'http://localhost/e-commerce-ai/product/'+formatString(product.parent_title)+'/',
+                      
+                      type: 'POST',
+                      headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                      },
+                      data: {
+                        attribute_pa_color: color,
+                        attribute_pa_size: size,
+                        quantity: '1',
+                        'add-to-cart': product.post_parent,
+                        product_id: product.post_parent,
+                        variation_id: product.ID
+                      },
+                      success: function(response) {
+                        console.log('Thêm sản phẩm thành công:', response);
+                      },
+                      error: function(xhr, status, error) {
+                        console.log('Có lỗi xảy ra:', error);
+                      }
+                    });
+                        })
+                    }
+                    chatLog.scrollTop = chatLog.scrollHeight;
+                };
+                    
+                        function sendMessage() {
+                            var buttonVorE = document.getElementById('toggleBtn').textContent;
+                            var message = document.getElementById('messageInput').value;
+                            if(message)
+                            {
+                            var messageHTML = document.createElement('div');
+                            messageHTML.classList.add('message');
+                            var messageContent = document.createElement("div");
+                            messageContent.classList.add("send");
+                            messageContent.textContent = message;
+                            messageHTML.appendChild(messageContent);
+                            chatLog.append(messageHTML);
+                            message="#"+buttonVorE+message
+                            websocket.send(message);
+                            document.getElementById('messageInput').value = '';
+                            }
+                        }
+                        function toggleButton(btn) {
+                    btn.textContent = btn.textContent === 'V' ? 'E' : 'V';
+                }
+                    
+                        document.getElementById('closeBtn').onclick = function() {
+                            chatbotContainer.style.display = 'none';
+                            chatbotIcon.style.display = 'block';
+                        };
+                    
+                        chatbotIcon.onclick = function() {
+                            chatbotContainer.style.display = 'block';
+                            chatbotIcon.style.display = 'none';
+                        };
+                    
+                        document.getElementById('messageInput').addEventListener('keypress', function(event) {
+                            if (event.key === 'Enter') {
+                                event.preventDefault();
+                                sendMessage();
+                            }
+                        });
+                        function startSpeechToText() {
+                            var recognition = new webkitSpeechRecognition();
+                            recognition.lang = 'en-US';
+                
+                            recognition.onresult = function(event) {
+                                var message = event.results[0][0].transcript;
+                
+                                var messageHTML = document.createElement('div');
+                            messageHTML.classList.add('message');
+                            var messageContent = document.createElement("div");
+                            messageContent.classList.add("send");
+                            messageContent.textContent = message;
+                            messageHTML.appendChild(messageContent);
+                            chatLog.append(messageHTML);
+                            websocket.send(message);
+                            };
+                
+                            recognition.start();
+                        }
+                        function extractDetails(str) {
+                    let colorMatch = str.match(/Color:\s*([^,]+)/i);
+                    let sizeMatch = str.match(/Size:\s*(\d+)/i);
+                
+                    let color = colorMatch ? colorMatch[1].trim() : null;
+                    let size = sizeMatch ? sizeMatch[1].trim() : null;
+                
+                    return { color, size };
+                }
+                        
+                        function formatString(str) {
+                            return str.trim() // Xóa khoảng trắng ở đầu và cuối chuỗi
+                              .replace(/\s+/g, '-') // Thay thế tất cả khoảng trắng bằng dấu gạch ngang
+                              .replace(/[^\w-]/g, '') // Xóa tất cả ký tự không phải chữ cái, số hoặc gạch ngang
+                              .toLowerCase(); // Chuyển tất cả về chữ thường
+                }
+                    </script>
+                    
+                </body>
+                </html></button>
+            <button id="toggleBtn" onclick="toggleButton(this)">V</button>
+            <div class="send-icon" onclick="sendMessage()">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" xml:space="preserve">
+                    <path fill="#d7d7d7" d="M22,11.7V12h-0.1c-0.1,1-17.7,9.5-18.8,9.1c-1.1-0.4,2.4-6.7,3-7.5C6.8,12.9,17.1,12,17.1,12H17c0,0,0-0.2,0-0.2c0,0,0,0,0,0c0-0.4-10.2-1-10.8-1.7c-0.6-0.7-4-7.1-3-7.5C4.3,2.1,22,10.5,22,11.7z"></path>
+                </svg>
+            </div>
+        </div>
+    </div>
+    
+    <button id="chatbotIcon">&#x1F4AC;</button>
+    
     <script>
         var websocket = new WebSocket("ws://localhost:6789");
         var chatLog = document.getElementById('chatLog');
-
+        var chatbotContainer = document.getElementById('chatbotContainer');
+        var chatbotIcon = document.getElementById('chatbotIcon');
+    
         websocket.onmessage = function(event) {
-            chatLog.value += 'Bot: ' + event.data + '\n';
-        };
+    var response = JSON.parse(event.data);
+    console.log(response)
+    var messageHTML = document.createElement('div');
+    messageHTML.classList.add('message');
 
+    var messageContent = document.createElement("div");
+    messageContent.classList.add("reply");
+    messageContent.textContent = response.message;
+    console.log(response.message)
+
+    messageHTML.appendChild(messageContent);
+    chatLog.append(messageHTML);
+
+    if (response.type === "product_list" && Array.isArray(response.data)) {
+        response.data.forEach(product => {
+            var productHTML = document.createElement('div');
+            productHTML.classList.add('product');
+
+            var productLink = document.createElement('a');
+            productLink.href = "http://localhost/e-commerce-ai/product/"+formatString(product.post_title);
+            productLink.target = '_blank';
+            productLink.style.display = 'flex';
+            productLink.style.alignItems = 'center';
+
+            var productImage = document.createElement('img');
+            productImage.src ="http://localhost/e-commerce-ai/wp-content/uploads/"+ product.url_img;
+            productImage.width = 50;
+            productImage.height = 50;
+
+            var productInfo = document.createElement('div');
+            productInfo.classList.add('info');
+
+            var productName = document.createElement('div');
+            productName.classList.add('name');
+            productName.textContent = product.post_title;
+
+            var productPrice = document.createElement('div');
+            productPrice.classList.add('price');
+            productPrice.textContent = product.max_price;
+
+            productInfo.appendChild(productName);
+            productInfo.appendChild(productPrice);
+
+            productLink.appendChild(productImage);
+            productLink.appendChild(productInfo);
+
+            var buttonsDiv = document.createElement('div');
+            buttonsDiv.classList.add('buttons');
+
+            // var addToCartButton = document.createElement('button');
+            // addToCartButton.classList.add('button');
+            // addToCartButton.textContent = 'Add to Cart';
+
+            // var buyNowButton = document.createElement('button');
+            // buyNowButton.classList.add('button');
+            // buyNowButton.textContent = 'Buy Now';
+
+            // buttonsDiv.appendChild(addToCartButton);
+            // buttonsDiv.appendChild(buyNowButton);
+
+            productHTML.appendChild(productLink);
+            productHTML.appendChild(buttonsDiv);
+
+            chatLog.append(productHTML);
+        });
+    }
+    if(response.type === "redirect" )
+    {       
+            setTimeout(function() {
+             window.location.href = 'http://localhost/e-commerce-ai/'+response.data+'/';
+            }, 3000);
+    }
+    if (response.type === "add success" && Array.isArray(response.data))
+    {
+        
+        response.data.forEach(product => {
+            let details = extractDetails(product.post_excerpt);
+        color= details.color;
+        size=details.size;
+
+            $.ajax({
+      url: 'http://localhost/e-commerce-ai/product/'+formatString(product.parent_title)+'/',
+      
+      type: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      data: {
+        attribute_pa_color: color,
+        attribute_pa_size: size,
+        quantity: '1',
+        'add-to-cart': product.post_parent,
+        product_id: product.post_parent,
+        variation_id: product.ID
+      },
+      success: function(response) {
+        console.log('Thêm sản phẩm thành công:', response);
+      },
+      error: function(xhr, status, error) {
+        console.log('Có lỗi xảy ra:', error);
+      }
+    });
+        })
+    }
+    chatLog.scrollTop = chatLog.scrollHeight;
+};
+    
         function sendMessage() {
+            var buttonVorE = document.getElementById('toggleBtn').textContent;
             var message = document.getElementById('messageInput').value;
-            chatLog.value += 'You: ' + message + '\n';
+            if(message)
+            {
+            var messageHTML = document.createElement('div');
+            messageHTML.classList.add('message');
+            var messageContent = document.createElement("div");
+            messageContent.classList.add("send");
+            messageContent.textContent = message;
+            messageHTML.appendChild(messageContent);
+            chatLog.append(messageHTML);
+            message="#"+buttonVorE+message
             websocket.send(message);
             document.getElementById('messageInput').value = '';
+            }
         }
+        function toggleButton(btn) {
+    btn.textContent = btn.textContent === 'V' ? 'E' : 'V';
+}
+    
+        document.getElementById('closeBtn').onclick = function() {
+            chatbotContainer.style.display = 'none';
+            chatbotIcon.style.display = 'block';
+        };
+    
+        chatbotIcon.onclick = function() {
+            chatbotContainer.style.display = 'block';
+            chatbotIcon.style.display = 'none';
+        };
+    
+        document.getElementById('messageInput').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+        function startSpeechToText() {
+            var recognition = new webkitSpeechRecognition();
+            recognition.lang = 'en-US';
+
+            recognition.onresult = function(event) {
+                var message = event.results[0][0].transcript;
+
+                var messageHTML = document.createElement('div');
+            messageHTML.classList.add('message');
+            var messageContent = document.createElement("div");
+            messageContent.classList.add("send");
+            messageContent.textContent = message;
+            messageHTML.appendChild(messageContent);
+            chatLog.append(messageHTML);
+            websocket.send(message);
+            };
+
+            recognition.start();
+        }
+        function extractDetails(str) {
+    let colorMatch = str.match(/Color:\s*([^,]+)/i);
+    let sizeMatch = str.match(/Size:\s*(\d+)/i);
+
+    let color = colorMatch ? colorMatch[1].trim() : null;
+    let size = sizeMatch ? sizeMatch[1].trim() : null;
+
+    return { color, size };
+}
+        
+        function formatString(str) {
+            return str.trim() // Xóa khoảng trắng ở đầu và cuối chuỗi
+              .replace(/\s+/g, '-') // Thay thế tất cả khoảng trắng bằng dấu gạch ngang
+              .replace(/[^\w-]/g, '') // Xóa tất cả ký tự không phải chữ cái, số hoặc gạch ngang
+              .toLowerCase(); // Chuyển tất cả về chữ thường
+}
     </script>
+    
 </body>
 </html>
