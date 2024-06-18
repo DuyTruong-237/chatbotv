@@ -29,12 +29,14 @@ def chat(question,chatbot,label2id,intents):
     #         }
     try:
         label = label2id[chatbot(question)[0]['label']]
-        print("hio")
+       
+       
         response = random.choice(intents['intents'][label]['responses'])
         result = {
             "message": response,
             "type": "supmessage",
         }
+       
     except Exception as e:
         print(f"An error occurred: {e}")  # In thông báo lỗi để dễ dàng gỡ lỗi
         result = {

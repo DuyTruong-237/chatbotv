@@ -3,9 +3,8 @@ import json
 from underthesea import word_tokenize, text_normalize
 import numpy as np
 import random
-from transformers import BertTokenizer, BertForSequenceClassification
+from transformers import PhobertTokenizer, RobertaForSequenceClassification
 import torch
-
 
 
 def preprocess_text(text):
@@ -18,24 +17,25 @@ def load_dataset(filename):
         data = json.load(file)
     return data['intents']
 
-def classify_questionvn(input_text, dataset ):
+def classify_question_vn(input_text, dataset, model,tokenizer, id2label):
     input_text = preprocess_text(input_text.lower())
-    input_tokens = set(input_text.split())
-    best_tag = None
-    highest_similarity = -1
-    for item in dataset:
-        for pattern in item['patterns']:
-            pattern_text = preprocess_text(pattern.lower())
-            pattern_tokens = set(pattern_text.split())
-            similarity = len(input_tokens.intersection(pattern_tokens)) / len(input_tokens.union(pattern_tokens))
-            if similarity > highest_similarity:
-                highest_similarity = similarity
-                best_tag = item['tag']
-    return respond_to_question(best_tag, dataset)
+    inputs = tokenizer(input_text, return_tensors="pt", padding=True, truncation=True, max_length=128)
+    outputs = model(**inputs)
+    prediction = torch.argmax(outputs.logits, dim=-1).item()
+    tag = id2label[prediction]  # Use id2label to get the tag
+    return respond_to_question(tag, dataset)
+
+# def respond_to_question(tag, dataset):
+#     for intent in dataset:
+#         if intent['tag'] == tag:
+#             return random.choice(intent['responses'])
+#     return "Xin lỗi, tôi không hiểu câu hỏi của bạn."
 
 
 def respond_to_question(tag, dataset):
     respond="Xin lỗi, tôi không hiểu câu hỏi của bạn."
+    
+
     for intent in dataset:
         if intent['tag'] == tag:
             respond= random.choice(intent['responses'])
@@ -45,6 +45,7 @@ def respond_to_question(tag, dataset):
             "type":"add success",
             "data":""
         }
+   
     return json.dumps(result)
 
 

@@ -1,7 +1,9 @@
-from transformers import BertForSequenceClassification, BertTokenizer, BertTokenizerFast, pipeline, BertConfig,BertModel, BertPreTrainedModel
+from transformers import BertForSequenceClassification, BertTokenizer, BertTokenizerFast, pipeline, BertConfig,BertModel, BertPreTrainedModel,PhobertTokenizer, RobertaForSequenceClassification
 from tensorflow.keras.models import load_model
 import torch
 import torch.nn as nn
+import pandas as pd
+import json
 
 from transformers import BertForTokenClassification
 
@@ -97,7 +99,7 @@ class BertForJointIntentAndNER(BertPreTrainedModel):
     
 #     return model, tokenizer,label_dict
 def load_model_and_tokenizer_entities( device):
-    tokenizer = BertTokenizer.from_pretrained('tokenizer')
+    tokenizer = BertTokenizer.from_pretrained('./model/tokenizer')
     num_labels = len(label_dict)
     num_intents = len(intent_dict)
 
@@ -108,7 +110,7 @@ def load_model_and_tokenizer_entities( device):
     model = BertForJointIntentAndNER.from_pretrained('bert-base-uncased', config=config, num_intents=num_intents, num_labels=num_labels)
 
     # Tải trọng số mô hình đã lưu, đảm bảo rằng nó phù hợp với thiết bị
-    model.load_state_dict(torch.load('model3.bin', map_location=device))
+    model.load_state_dict(torch.load('./model/entities_model.bin', map_location=device))
 
     # Chuyển mô hình đến thiết bị phù hợp (GPU hoặc CPU)
     model.to(device)
@@ -140,3 +142,29 @@ def load_question_classification_model(model_path):
     return model, tokenizer
 
 
+def load_json_file_vn(filename):
+    with open(filename,'r', encoding='utf-8') as f:
+        file = json.load(f)
+    return file
+
+def create_df_vn():
+    df = pd.DataFrame({
+        'Pattern' : [],
+        'Tag' : []
+    })
+    return df
+def extract_json_info_vn(json_file, df):
+    for intent in json_file['intents']:
+        for pattern in intent['patterns']:
+            sentence_tag = [pattern, intent['tag']]
+            df.loc[len(df.index)] = sentence_tag
+    return df
+def load_model_vn(model_path, num_labels, id2label, label2id):
+    tokenizer = PhobertTokenizer.from_pretrained(model_path)
+    model = RobertaForSequenceClassification.from_pretrained(model_path, num_labels=num_labels, id2label=id2label, label2id=label2id)
+    return model, tokenizer
+
+def load_dataset_vn(filename):
+    with open(filename, 'r', encoding='utf-8') as file:
+        data = json.load(file)
+    return data['intents']

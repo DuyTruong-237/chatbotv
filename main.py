@@ -25,36 +25,37 @@ import asyncio
 import websockets
 from functools import partial
 from load_model import (load_chatbot_model,load_model_and_tokenizer_entities, load_token_classification_model, 
-                          load_image_classification_model, load_question_classification_model)
+                          load_image_classification_model, load_question_classification_model,load_model_vn,extract_json_info_vn,create_df_vn,load_json_file_vn,load_dataset_vn)
 from support_handle import (chat, load_json_file, create_df,extract_json_info)
 from enttities_handle import (checkoutHandle,predict,add_to_cart_handle,find_products)
 from cnn_handle import (find_similar_images, extract_features,load_and_preprocess_image, preprocess_and_extract_features,findImage)
 from classify_handle import (classify_question_with_model)
-from vn_handle import (classify_questionvn)
+from vn_handle import (classify_question_vn)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Đường dẫn tới các mô hình
-chatbot_model_path = "./Support_final"
-token_classification_model_path = 'best_model_state2.bin'
-image_classification_model_path = 'model1.h5'
-question_classification_model_path = './Classify3/Classify'
-
+chatbot_model_path = "./model/support"
+token_classification_model_path = './model/best_model_state2.bin'
+image_classification_model_path = './model/model1.h5'
+question_classification_model_path = './model/Classify3/Classify'
+model_path_vn = "./model/VN_Support1"
+filename_vn = './model/vn_intend.json'
 # Load các mô hình
 chatbot = load_chatbot_model(chatbot_model_path)
 model1, tokenizer1,label_dict = load_model_and_tokenizer_entities(device)
 
 model3, tokenizer3 = load_question_classification_model(question_classification_model_path)
-def load_dataset(filename):
-    with open(filename, 'r', encoding='utf-8') as file:
-        data = json.load(file)
-    return data['intents']
-# modelvn = BertForSequenceClassification.from_pretrained("VN_Support1")
-# tokenizervn = BertTokenizer.from_pretrained("VN_Support1")
-datasetvn = load_dataset('vn_intend.json')
+# def load_dataset(filename):
+#     with open(filename, 'r', encoding='utf-8') as file:
+#         data = json.load(file)
+#     return data['intents']
+# # modelvn = BertForSequenceClassification.from_pretrained("VN_Support1")
+# # tokenizervn = BertTokenizer.from_pretrained("VN_Support1")
+# datasetvn = load_dataset('./model/vn_intend.json')
 
 
 
-filename = './intend_number.json'
+filename = './model/intend_number_final.json'
 intents = load_json_file(filename)
 df = create_df()
 df2 = extract_json_info(intents, df)
@@ -62,6 +63,17 @@ labels = df2['Tag'].unique().tolist()
 labels = [s.strip() for s in labels]
 label2id = {label: id for id, label in enumerate(labels)}
 
+
+intents_vn = load_json_file_vn(filename_vn)
+df_vn = create_df_vn()
+df2_vn = extract_json_info_vn(intents_vn, df_vn)
+labels_vn = df2_vn['Tag'].unique().tolist()
+labels_vn = [s.strip() for s in labels_vn]
+num_labels_vn = len(labels_vn)
+label2id_vn = {label: id for id, label in enumerate(labels_vn)}
+id2label_vn = {id:label for id, label in enumerate(labels_vn)}
+dataset_vn = load_dataset_vn('./model/vn_intend.json')
+model_vn, tokenizer_vn=load_model_vn(model_path_vn, num_labels_vn, id2label_vn, label2id_vn)
 class DecimalEncoder(JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Decimal):
@@ -74,7 +86,7 @@ config = {
     'user': 'root',
     'password': 'root',
     'host': 'localhost',
-    'database': 'shop1',
+    'database': 'shop3',
     'port': 3308,
     'raise_on_warnings': True
 }
@@ -88,13 +100,13 @@ try:
 except mysql.connector.Error as err:
     print("An error occurred: {}".format(err))
 
-label_map = {0: "general_question", 1: "product_information", 2: "ambiguous_questions"}
+label_map = {0: "support_request", 1: "handle_request", 2: "ambiguous_questions"}
 
 sessions_data = {}
 def handle_Q(message, model3, tokenizer3, label_map):
     print("Processing message...")
     typequestion = classify_question_with_model(message, model3, tokenizer3, label_map)
-    if typequestion == "product_information":
+    if typequestion == "handle_request":
         response = predict(message,model1, tokenizer1, device) 
         try:
             response = json.loads(response) if isinstance(response, str) else response
@@ -102,22 +114,25 @@ def handle_Q(message, model3, tokenizer3, label_map):
             print(f"Error decoding JSON: {e}")
             response = {}
     else: response=chat(message, chatbot, label2id, intents)
-    print(response)
+   
+    print("type of the message '" + message+"' is "+ typequestion)
 
 
 
     return response,typequestion
 def goHandle(data):
 
-        if(data['intent'][0]==3):
+        if(data['intent'][0]==1):
             return add_to_cart_handle(data,cnx)
         else:
-            if(data['intent'][-1]==3):
-                return add_to_cart_handle(data,cnx)
             if(data['intent'][-1]==1):
+                return add_to_cart_handle(data,cnx)
+            elif(data['intent'][-1]==3):
                 return find_products(data,cnx)
-            if(data['intent'][-1]==5):
+            elif(data['intent'][-1]==7):
                 return checkoutHandle(data)
+            else:
+                return find_products(data,cnx)
         # if (len(data['intent'])>1):
         #     if(data['intent'][-1]==7):
         #         return add_to_cart_handle(data,cnx)
@@ -140,13 +155,13 @@ async def classify_question(websocket, path):
     async for message in websocket:
         if message.startswith("#V"):
             message = message.replace("#V", "")
-            response= classify_questionvn(message, datasetvn)
+            response= classify_question_vn(message, dataset_vn, model_vn,tokenizer_vn, id2label_vn)
             print(response)
             await websocket.send(response)
         else:
             message = message.replace("#E", "")
             response_data, typeQuestion = handle_Q(message, model3, tokenizer3, label_map)
-            if(typeQuestion=="product_information"):
+            if(typeQuestion=="handle_request"):
                 current_session = sessions_data[session_id]
 
                 # Update intent predictions
@@ -165,7 +180,7 @@ async def classify_question(websocket, path):
                 
 
                 # Send updated session data back to client
-                print(response)
+              
             else: 
                 response= response_data
             

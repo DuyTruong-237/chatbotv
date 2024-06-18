@@ -183,7 +183,7 @@ def predict(sentence, model, tokenizer, device):
 
     entity_predictions = torch.argmax(logits, dim=2).cpu().numpy().flatten()
     intent_predictions = torch.argmax(intent_logits, dim=1).cpu().numpy().flatten()
-    print(intent_predictions)
+   
     id2label = {v: k for k, v in label_dict.items()}
     id2intent = {v: k for k, v in intent_dict.items()}
 
@@ -222,7 +222,7 @@ def predict(sentence, model, tokenizer, device):
         "intent_prediction": intent_predictions.tolist(),
         "entities": entities
     }
-    print(prediction_result)
+  
     
     return json.dumps(prediction_result, indent=4)
     
@@ -269,25 +269,29 @@ def add_to_cart_handle(data,cnx):
 
                  """
         query+=title
-        print(query)
+       
         cursor = cnx.cursor(dictionary=True)
-
+        message = f"add to cart success the shoe {str(name)}, {color} color, size {str(size)}"
         try:
             # Execute the query
             cursor.execute(query)
             # Fetch all the rows
             results = cursor.fetchall()
+            
         except Exception as e:
             print("Database error:", e)
             results = []
-        print(results)
+        
         #Sử dụng f-string và chuyển đổi size thành chuỗi khi cần ghép nối
-        message = f"add to cart success the shoe {name}, {color} color, size {str(size)}"
+        if(results==[]):
+            message = f"I don't have any shoe to add  for the shoe {str(name)}, {color} color, size {str(size)}"
+    
         result={
             "message":message,
             "type":"add success",
             "data":results
         }
+    
         return json.dumps(result)
 
 # def find_products(data,cnx):
@@ -378,7 +382,9 @@ def find_products(data, cnx):
         wp_postmeta pm2 ON pm.meta_value = pm2.post_id AND pm2.meta_key = '_wp_attached_file'
     WHERE
         (p.post_type = 'product' OR p.post_type = 'product_variation')
+        AND pm2.meta_value IS NOT NULL
         AND pm.meta_key = '_thumbnail_id'
+
     """
 
     # Thêm các điều kiện tìm kiếm dựa trên biến
@@ -392,7 +398,7 @@ def find_products(data, cnx):
         query += " AND " + " AND ".join(conditions)
 
     query += " LIMIT 5;"
-    print(query)
+   
 
     # Use dictionary cursor to ease JSON conversion
     cursor = cnx.cursor(dictionary=True)

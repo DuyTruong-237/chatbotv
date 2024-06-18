@@ -33,12 +33,12 @@
             position: fixed;
             bottom: 20px;
             right: 20px;
-            padding: 10px;
+           
             cursor: pointer;
-            border-radius: 30px;
-            width: 60px;
-            height: 60px;
-            background: #f83992;
+           
+            width: 80px;
+            height: 80px;
+            
             display: flex;
             align-items: center;
             justify-content: center;
@@ -148,8 +148,9 @@
             display: flex;
             -ms-flex-direction: column;
             flex-direction: column;
-            background: #0066ff;
+            background: #4e8eee;
             color: #000;
+            color: white;
             margin-left: 40px;
 
         }
@@ -251,6 +252,8 @@
         button {
             margin: 0px;
             color: black;
+            border: none;
+            background-color: white;
         }
 
         .product .buttons {
@@ -276,6 +279,9 @@
         .product:hover .buttons {
             display: flex;
         }
+        .image{
+            width: 50px;
+        }
     </style>
 
     <div id="chatbotContainer" style="display: none;">
@@ -283,11 +289,11 @@
             <div class="avartar">
                 <div class="status"></div>
                 <div class="image">
-                    <img src="https://cdn.chatbot.com/widget/61f28451fdd7c5000728b4f9/2A8kicyF.png"
+                    <img src="https://cdn3.iconfinder.com/data/icons/chat-bot-emoji-blue-filled-color/300/14134081Untitled-3-4096.png"
                         alt="Chatbot avartar" />
                 </div>
             </div>
-            <div class="name">Chatbot</div>
+            <div class="name">GigiBot</div>
             <button id="closeBtn">
                 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path
@@ -318,7 +324,7 @@
         </div>
     </div>
 
-    <button id="chatbotIcon">&#x1F4AC;</button>
+    <img id="chatbotIcon" src="https://cdn3.iconfinder.com/data/icons/chat-bot-emoji-blue-filled-color/300/14134081Untitled-3-4096.png">;</img>
 
     <script>
         var websocket = new WebSocket("ws://localhost:6789");
@@ -328,9 +334,231 @@
         var user = extractWordPressUsernames()
         console.log("llllllllllllllllllllllllllllllllllllll")
         console.log(user)
+        processMessages()
         websocket.onmessage = function (event) {
             var response = JSON.parse(event.data);
-            console.log(response)
+            saveMessage("chatbot",response)
+            // console.log(response)
+            // var messageHTML = document.createElement('div');
+            // messageHTML.classList.add('message');
+
+            // var messageContent = document.createElement("div");
+            // messageContent.classList.add("reply");
+            // messageContent.textContent = response.message;
+            // console.log(response.message)
+
+            // messageHTML.appendChild(messageContent);
+            // chatLog.append(messageHTML);
+
+            // if (response.type === "product_list" && Array.isArray(response.data)) {
+            //     response.data.forEach(product => {
+            //         var productHTML = document.createElement('div');
+            //         productHTML.classList.add('product');
+
+            //         var productLink = document.createElement('a');
+            //         productLink.href = "http://localhost/e-commerce-ai/product/" + formatString(product.post_title);
+            //         productLink.target = '_blank';
+            //         productLink.style.display = 'flex';
+            //         productLink.style.alignItems = 'center';
+
+            //         var productImage = document.createElement('img');
+            //         productImage.src = "http://localhost/e-commerce-ai/wp-content/uploads/" + product.url_img;
+            //         productImage.width = 50;
+            //         productImage.height = 50;
+
+            //         var productInfo = document.createElement('div');
+            //         productInfo.classList.add('info');
+
+            //         var productName = document.createElement('div');
+            //         productName.classList.add('name');
+            //         productName.textContent = product.post_title;
+
+            //         var productPrice = document.createElement('div');
+            //         productPrice.classList.add('price');
+            //         productPrice.textContent = product.max_price;
+
+            //         productInfo.appendChild(productName);
+            //         productInfo.appendChild(productPrice);
+
+            //         productLink.appendChild(productImage);
+            //         productLink.appendChild(productInfo);
+
+            //         var buttonsDiv = document.createElement('div');
+            //         buttonsDiv.classList.add('buttons');
+
+            //         // var addToCartButton = document.createElement('button');
+            //         // addToCartButton.classList.add('button');
+            //         // addToCartButton.textContent = 'Add to Cart';
+
+            //         // var buyNowButton = document.createElement('button');
+            //         // buyNowButton.classList.add('button');
+            //         // buyNowButton.textContent = 'Buy Now';
+
+            //         // buttonsDiv.appendChild(addToCartButton);
+            //         // buttonsDiv.appendChild(buyNowButton);
+
+            //         productHTML.appendChild(productLink);
+            //         productHTML.appendChild(buttonsDiv);
+
+            //         chatLog.append(productHTML);
+            //     });
+            // }
+            addChatbotMessage(response)
+            if (response.type === "redirect") {
+                setTimeout(function () {
+                    window.location.href = 'http://localhost/e-commerce-ai/' + response.data + '/';
+                }, 3000);
+            }
+            if (response.type === "add success" && Array.isArray(response.data)) {
+
+                response.data.forEach(product => {
+                    let details = extractDetails(product.post_excerpt);
+                    color = details.color;
+                    size = details.size;
+                
+                    $.ajax({
+                        url: 'http://localhost/e-commerce-ai/product/' + formatString(product.parent_title) + '/',
+
+                        type: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        data: {
+                            attribute_pa_color: color,
+                            attribute_pa_size: size,
+                            quantity: '1',
+                            'add-to-cart': product.post_parent,
+                            product_id: product.post_parent,
+                            variation_id: product.ID
+                        },
+                        success: function (response) {
+                            console.log('add to cart success:', response);
+                           updateMiniCart();
+                        },
+                        error: function (xhr, status, error) {
+                            console.log('Có lỗi xảy ra:', error);
+                        }
+                    });
+                })
+            }
+            chatLog.scrollTop = chatLog.scrollHeight;
+        };
+        function updateMiniCart() {
+          
+    jQuery.ajax({
+        url: wc_add_to_cart_params.ajax_url, // Lấy URL AJAX từ WooCommerce
+        type: 'POST',
+        data: {
+            'action': 'woocommerce_update_mini_cart' // Tên action trong WordPress
+        },
+        success: function(response) {
+            // Thay thế nội dung của mini cart bằng nội dung mới
+            jQuery('.widget_shopping_cart_content').html(response);
+            
+        },
+        error: function(error) {
+            console.error('Cập nhật mini cart thất bại:', error);
+        }
+    });
+}
+
+        function sendMessage() {
+            var buttonVorE = document.getElementById('toggleBtn').textContent;
+            var message = document.getElementById('messageInput').value;
+            if (message) {
+                addUserMessage(message)
+                message = "#" + buttonVorE + message
+                websocket.send(message);
+                document.getElementById('messageInput').value = '';
+                saveMessage("user", message);
+
+            }
+        }
+        
+
+        function extractWordPressUsernames() {
+            let cookies = document.cookie; // Lấy toàn bộ chuỗi cookies
+            console.log(cookies)
+            let parts = cookies.split('; '); // Tách chuỗi thành mảng các cookies
+            let username = ""
+           
+
+           
+            parts.forEach(cookie => {
+                console.log(cookie)
+                if (cookie.startsWith('wordpress_logged_in')) {
+                    console.log(cookie)
+                    let value = cookie.split('=')[1]; 
+                    console.log(value);
+                    let userParts = value.split('%'); 
+                    if (userParts.length > 0) {
+                        username = userParts[0]; 
+
+                    }
+                }
+            });
+
+            return username; 
+        }
+        function toggleButton(btn) {
+            btn.textContent = btn.textContent === 'V' ? 'E' : 'V';
+        }
+
+        document.getElementById('closeBtn').onclick = function () {
+            chatbotContainer.style.display = 'none';
+            chatbotIcon.style.display = 'block';
+        };
+
+        chatbotIcon.onclick = function () {
+            chatbotContainer.style.display = 'block';
+            chatLog.scrollTop = chatLog.scrollHeight;
+
+            chatbotIcon.style.display = 'none';
+        };
+
+        document.getElementById('messageInput').addEventListener('keypress', function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+        function startSpeechToText() {
+            var recognition = new webkitSpeechRecognition();
+            recognition.lang = 'en-US';
+
+            recognition.onresult = function (event) {
+                var message = event.results[0][0].transcript;
+
+                // var messageHTML = document.createElement('div');
+                // messageHTML.classList.add('message');
+                // var messageContent = document.createElement("div");
+                // messageContent.classList.add("send");
+                // messageContent.textContent = message;
+                // messageHTML.appendChild(messageContent);
+                // chatLog.append(messageHTML);
+                addUserMessage(message)
+                var buttonVorE = document.getElementById('toggleBtn').textContent;
+
+                message = "#" + buttonVorE + message
+                console.log(message)
+                websocket.send(message);
+                saveMessage("user", message);
+
+            };
+
+            recognition.start();
+        }
+        function addUserMessage(message){
+            var messageHTML = document.createElement('div');
+                messageHTML.classList.add('message');
+                var messageContent = document.createElement("div");
+                messageContent.classList.add("send");
+                messageContent.textContent = message;
+                messageHTML.appendChild(messageContent);
+                chatLog.append(messageHTML);
+            
+        }
+        function addChatbotMessage(response){
             var messageHTML = document.createElement('div');
             messageHTML.classList.add('message');
 
@@ -395,144 +623,6 @@
                     chatLog.append(productHTML);
                 });
             }
-            if (response.type === "redirect") {
-                setTimeout(function () {
-                    window.location.href = 'http://localhost/e-commerce-ai/' + response.data + '/';
-                }, 3000);
-            }
-            if (response.type === "add success" && Array.isArray(response.data)) {
-
-                response.data.forEach(product => {
-                    let details = extractDetails(product.post_excerpt);
-                    color = details.color;
-                    size = details.size;
-                
-                    $.ajax({
-                        url: 'http://localhost/e-commerce-ai/product/' + formatString(product.parent_title) + '/',
-
-                        type: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded'
-                        },
-                        data: {
-                            attribute_pa_color: color,
-                            attribute_pa_size: size,
-                            quantity: '1',
-                            'add-to-cart': product.post_parent,
-                            product_id: product.post_parent,
-                            variation_id: product.ID
-                        },
-                        success: function (response) {
-                            console.log('add to cart success:', response);
-                           updateMiniCart();
-                        },
-                        error: function (xhr, status, error) {
-                            console.log('Có lỗi xảy ra:', error);
-                        }
-                    });
-                })
-            }
-            chatLog.scrollTop = chatLog.scrollHeight;
-        };
-        function updateMiniCart() {
-          
-    jQuery.ajax({
-        url: wc_add_to_cart_params.ajax_url, // Lấy URL AJAX từ WooCommerce
-        type: 'POST',
-        data: {
-            'action': 'woocommerce_update_mini_cart' // Tên action trong WordPress
-        },
-        success: function(response) {
-            // Thay thế nội dung của mini cart bằng nội dung mới
-            jQuery('.widget_shopping_cart_content').html(response);
-            
-        },
-        error: function(error) {
-            console.error('Cập nhật mini cart thất bại:', error);
-        }
-    });
-}
-
-        function sendMessage() {
-            var buttonVorE = document.getElementById('toggleBtn').textContent;
-            var message = document.getElementById('messageInput').value;
-            if (message) {
-                var messageHTML = document.createElement('div');
-                messageHTML.classList.add('message');
-                var messageContent = document.createElement("div");
-                messageContent.classList.add("send");
-                messageContent.textContent = message;
-                messageHTML.appendChild(messageContent);
-                chatLog.append(messageHTML);
-                message = "#" + buttonVorE + message
-                websocket.send(message);
-                document.getElementById('messageInput').value = '';
-            }
-        }
-        
-
-        function extractWordPressUsernames() {
-            let cookies = document.cookie; // Lấy toàn bộ chuỗi cookies
-            console.log(cookies)
-            let parts = cookies.split('; '); // Tách chuỗi thành mảng các cookies
-            let username = ""
-           
-
-           
-            parts.forEach(cookie => {
-                console.log(cookie)
-                if (cookie.startsWith('wordpress_logged_in')) {
-                    console.log(cookie)
-                    let value = cookie.split('=')[1]; 
-                    console.log(value);
-                    let userParts = value.split('%'); 
-                    if (userParts.length > 0) {
-                        username = userParts[0]; 
-
-                    }
-                }
-            });
-
-            return username; 
-        }
-        function toggleButton(btn) {
-            btn.textContent = btn.textContent === 'V' ? 'E' : 'V';
-        }
-
-        document.getElementById('closeBtn').onclick = function () {
-            chatbotContainer.style.display = 'none';
-            chatbotIcon.style.display = 'block';
-        };
-
-        chatbotIcon.onclick = function () {
-            chatbotContainer.style.display = 'block';
-            chatbotIcon.style.display = 'none';
-        };
-
-        document.getElementById('messageInput').addEventListener('keypress', function (event) {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                sendMessage();
-            }
-        });
-        function startSpeechToText() {
-            var recognition = new webkitSpeechRecognition();
-            recognition.lang = 'en-US';
-
-            recognition.onresult = function (event) {
-                var message = event.results[0][0].transcript;
-
-                var messageHTML = document.createElement('div');
-                messageHTML.classList.add('message');
-                var messageContent = document.createElement("div");
-                messageContent.classList.add("send");
-                messageContent.textContent = message;
-                messageHTML.appendChild(messageContent);
-                chatLog.append(messageHTML);
-                websocket.send(message);
-            };
-
-            recognition.start();
         }
         function extractDetails(str) {
             let colorMatch = str.match(/Color:\s*([^,]+)/i);
@@ -543,6 +633,37 @@
 
             return { color, size };
         }
+        function saveMessage(name, data) {
+    const messages = getMessages(); // Lấy mảng tin nhắn hiện tại
+    const newMessage = {
+        name: name,
+        data: data
+    };
+    
+    messages.push(newMessage); // Thêm tin nhắn mới vào mảng
+    localStorage.setItem('chatData', JSON.stringify(messages)); // Lưu lại vào local storage
+}
+function getMessages() {
+    const messages = localStorage.getItem('chatData');
+    if (messages) {
+        return JSON.parse(messages);
+    }
+    return [];
+}
+function processMessages() {
+    const messages = getMessages(); // Lấy mảng tin nhắn hiện tại
+    messages.forEach((message, index) => {
+        if(message.name=="user"){
+            addUserMessage(message.data)
+        }
+        else if(message.name=="chatbot"){
+            addChatbotMessage(message.data)
+        }
+        chatLog.scrollTop = chatLog.scrollHeight;
+       
+        // Thêm bất kỳ xử lý nào bạn cần tại đây
+    });
+}
 
         function formatString(str) {
     return str.trim() // Xóa khoảng trắng ở đầu và cuối chuỗi
