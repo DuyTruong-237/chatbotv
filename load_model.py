@@ -7,7 +7,7 @@ import json
 
 from transformers import BertForTokenClassification
 
-intent_dict = {'update cart': 0, 'find': 1, 'remove item': 2, 'add to cart': 3, 'order_inquiry': 4, 'checkout': 5, 'cancel order': 6, 'undefined': 7,'default': 8}
+intent_dict = {'find one': 0, 'cancel order': 1, 'add to cart': 2, 'remove item': 3, 'undefined': 4, 'find': 5, 'update cart': 6, 'order_inquiry': 7, 'checkout': 8, 'default':9}
 # Dictionary for NER labels
 label_dict = {
     'O': 0,
@@ -110,7 +110,7 @@ def load_model_and_tokenizer_entities( device):
     model = BertForJointIntentAndNER.from_pretrained('bert-base-uncased', config=config, num_intents=num_intents, num_labels=num_labels)
 
     # Tải trọng số mô hình đã lưu, đảm bảo rằng nó phù hợp với thiết bị
-    model.load_state_dict(torch.load('./model/entities_model.bin', map_location=device))
+    model.load_state_dict(torch.load('./model/entities_model5.bin', map_location=device))
 
     # Chuyển mô hình đến thiết bị phù hợp (GPU hoặc CPU)
     model.to(device)

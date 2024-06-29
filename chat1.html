@@ -11,7 +11,7 @@
     <style>
         #chatbotContainer {
             width: 410px;
-            background-color: #f1f1f1;
+            background-color: #fff;
             border: 1px solid #d3d3d3;
             position: fixed;
             bottom: 0;
@@ -133,7 +133,7 @@
         }
 
         #chatbotContainer #chatLog .reply {
-            background: #ffffff;
+            background: #b9b8b8;
             color: #000000;
         }
 
@@ -156,7 +156,7 @@
         }
 
         #chatbotContainer .header {
-            background: white;
+            background: rgb(20, 223, 230);
             width: 100%;
             display: flex;
             height: 100px;
@@ -209,6 +209,8 @@
 
         .product {
             border: 1px solid #d3d3d3;
+            background-color: #f1f1f1;
+            margin-bottom: 10px;
             border-radius: 10px;
             padding: 10px;
             width: 300px;
@@ -217,6 +219,16 @@
             display: flex;
             align-items: center;
             position: relative;
+        }
+        .product1 div {
+margin-right:10px;
+            color:black;
+     font-weight: 800;
+    font-size: 0.9rem;
+        }
+.product td,th,tr,table{
+            color: #000;
+boder:grey;
         }
 
         .product img {
@@ -282,6 +294,19 @@
         .image{
             width: 50px;
         }
+        table {
+        width: 100%;
+        margin-top: 10px;
+        border-collapse: collapse;
+    }
+    th, td {
+        border: 1px solid #dddddd;
+        text-align: left;
+        padding: 8px;
+    }
+    th {
+        background-color: #f2f2f2;
+    }
     </style>
 
     <div id="chatbotContainer" style="display: none;">
@@ -313,7 +338,7 @@
                         d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z">
                     </path>
                 </svg></button>
-            <button id="toggleBtn" onclick="toggleButton(this)">V</button>
+            <button id="toggleBtn" onclick="toggleButton(this)">E</button>
             <div class="send-icon" onclick="sendMessage()">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" xml:space="preserve">
                     <path fill="#d7d7d7"
@@ -409,6 +434,7 @@
                     window.location.href = 'http://localhost/e-commerce-ai/' + response.data + '/';
                 }, 3000);
             }
+            
             if (response.type === "add success" && Array.isArray(response.data)) {
 
                 response.data.forEach(product => {
@@ -417,7 +443,7 @@
                     size = details.size;
                 
                     $.ajax({
-                        url: 'http://localhost/e-commerce-ai/product/' + formatString(product.parent_title) + '/',
+                        url: 'http://localhost/e-commerce-ai/product/' + cleanString(product.parent_title) + '/',
 
                         type: 'POST',
                         headers: {
@@ -467,10 +493,11 @@
             var message = document.getElementById('messageInput').value;
             if (message) {
                 addUserMessage(message)
+                saveMessage("user", message);
                 message = "#" + buttonVorE + message
                 websocket.send(message);
                 document.getElementById('messageInput').value = '';
-                saveMessage("user", message);
+                
 
             }
         }
@@ -501,7 +528,7 @@
             return username; 
         }
         function toggleButton(btn) {
-            btn.textContent = btn.textContent === 'V' ? 'E' : 'V';
+            btn.textContent = btn.textContent === 'E' ? 'V' : 'E';
         }
 
         document.getElementById('closeBtn').onclick = function () {
@@ -538,11 +565,11 @@
                 // chatLog.append(messageHTML);
                 addUserMessage(message)
                 var buttonVorE = document.getElementById('toggleBtn').textContent;
+                saveMessage("user", message);
 
                 message = "#" + buttonVorE + message
                 console.log(message)
                 websocket.send(message);
-                saveMessage("user", message);
 
             };
 
@@ -571,59 +598,127 @@
             chatLog.append(messageHTML);
 
             if (response.type === "product_list" && Array.isArray(response.data)) {
-                response.data.forEach(product => {
-                    var productHTML = document.createElement('div');
-                    productHTML.classList.add('product');
+    let maxVisibleProducts = 5; // Số sản phẩm tối đa hiển thị ban đầu
+    let showAll = false; // Biến kiểm soát việc hiển thị tất cả sản phẩm hay không
 
-                    var productLink = document.createElement('a');
-                    productLink.href = "http://localhost/e-commerce-ai/product/" + formatString(product.post_title);
-                    productLink.target = '_blank';
-                    productLink.style.display = 'flex';
-                    productLink.style.alignItems = 'center';
+    const productContainer = document.createElement('div');
+    chatLog.appendChild(productContainer); // Thêm container cho danh sách sản phẩm vào chatLog
 
-                    var productImage = document.createElement('img');
-                    productImage.src = "http://localhost/e-commerce-ai/wp-content/uploads/" + product.url_img;
-                    productImage.width = 50;
-                    productImage.height = 50;
-
-                    var productInfo = document.createElement('div');
-                    productInfo.classList.add('info');
-
-                    var productName = document.createElement('div');
-                    productName.classList.add('name');
-                    productName.textContent = product.post_title;
-
-                    var productPrice = document.createElement('div');
-                    productPrice.classList.add('price');
-                    productPrice.textContent = product.max_price;
-
-                    productInfo.appendChild(productName);
-                    productInfo.appendChild(productPrice);
-
-                    productLink.appendChild(productImage);
-                    productLink.appendChild(productInfo);
-
-                    var buttonsDiv = document.createElement('div');
-                    buttonsDiv.classList.add('buttons');
-
-                    // var addToCartButton = document.createElement('button');
-                    // addToCartButton.classList.add('button');
-                    // addToCartButton.textContent = 'Add to Cart';
-
-                    // var buyNowButton = document.createElement('button');
-                    // buyNowButton.classList.add('button');
-                    // buyNowButton.textContent = 'Buy Now';
-
-                    // buttonsDiv.appendChild(addToCartButton);
-                    // buttonsDiv.appendChild(buyNowButton);
-
-                    productHTML.appendChild(productLink);
-                    productHTML.appendChild(buttonsDiv);
-
-                    chatLog.append(productHTML);
-                });
+    const updateDisplay = () => {
+        productContainer.innerHTML = ''; // Chỉ xóa nội dung của danh sách sản phẩm
+        response.data.forEach((product, index) => {
+            if (!showAll && index >= maxVisibleProducts) {
+                return; // Nếu không hiển thị tất cả và số lượng sản phẩm đã vượt quá giới hạn, thì bỏ qua
             }
+
+            var productHTML = document.createElement('div');
+            productHTML.classList.add('product');
+
+            var productLink = document.createElement('a');
+            productLink.href = "http://localhost/e-commerce-ai/product/" + cleanString(product.post_title);
+            productLink.target = '_blank';
+            productLink.style.display = 'flex';
+            productLink.style.alignItems = 'center';
+
+            var productImage = document.createElement('img');
+            productImage.src = "http://localhost/e-commerce-ai/wp-content/uploads/" + product.url_img;
+            productImage.width = 50;
+            productImage.height = 50;
+
+            var productInfo = document.createElement('div');
+            productInfo.classList.add('info');
+
+            var productName = document.createElement('div');
+            productName.classList.add('name');
+            productName.textContent = product.post_title;
+
+            var productPrice = document.createElement('div');
+            productPrice.classList.add('price');
+            productPrice.textContent = product.max_price;
+
+            productInfo.appendChild(productName);
+            productInfo.appendChild(productPrice);
+
+            productLink.appendChild(productImage);
+            productLink.appendChild(productInfo);
+
+            var buttonsDiv = document.createElement('div');
+            buttonsDiv.classList.add('buttons');
+
+            productHTML.appendChild(productLink);
+            productHTML.appendChild(buttonsDiv);
+
+            productContainer.appendChild(productHTML);
+        });
+    };
+
+    // Thêm nút "Show All" và "Hide" tại cuối danh sách sản phẩm
+    var showAllButton = document.createElement('button');
+    showAllButton.textContent = 'Show All';
+    showAllButton.onclick = () => {
+        showAll = true;
+        updateDisplay();
+    };
+    chatLog.appendChild(showAllButton); // Thêm ngoài container sản phẩm
+
+    var hideButton = document.createElement('button');
+    hideButton.textContent = 'Hide';
+    hideButton.onclick = () => {
+        showAll = false;
+        updateDisplay();
+    };
+    chatLog.appendChild(hideButton); // Thêm ngoài container sản phẩm
+
+    updateDisplay(); // Gọi hàm để cập nhật giao diện lần đầu
+}
+
+            if (response.type === "product_info") {
+        const productContainer = document.createElement('div');
+        productContainer.classList.add('product');
+        const productContainer1 = document.createElement('div');
+        productContainer1.classList.add('product1');
+        const productTitle = document.createElement('div');
+        productTitle.textContent = response.data.title;
+        productContainer1.appendChild(productTitle);
+
+        const productImage = document.createElement('img');
+        productImage.src = "http://localhost/e-commerce-ai/wp-content/uploads/"+response.data.url_img;
+        productImage.alt = "Product Image";
+        productImage.style.width = "150px";
+        
+        productContainer1.appendChild(productImage);
+        productContainer.appendChild(productContainer1);
+
+        const productTable = document.createElement('table');
+        const headerRow = productTable.insertRow();
+        const headerCell1 = headerRow.insertCell();
+        headerCell1.textContent = 'Color';
+        const headerCell2 = headerRow.insertCell();
+        headerCell2.textContent = 'Sizes';
+
+        response.data.info.forEach(item => {
+            const row = productTable.insertRow();
+            const cell1 = row.insertCell();
+            cell1.textContent = item.Color;
+            const cell2 = row.insertCell();
+            cell2.textContent = item.Sizes;
+        });
+
+        productContainer.appendChild(productTable);
+
+        chatLog.append(productContainer);
+    }
         }
+        function createProductTable(data) {
+        
+        let htmlContent = `<table>`;
+        htmlContent += `<tr><th>Color</th><th>Sizes</th></tr>`;
+        data.info.forEach(item => {
+            htmlContent += `<tr><td>${item.Color}</td><td>${item.Sizes}</td></tr>`;
+        });
+        htmlContent += `</table>`;
+        return htmlContent;
+    }
         function extractDetails(str) {
             let colorMatch = str.match(/Color:\s*([^,]+)/i);
             let sizeMatch = str.match(/Size:\s*(\d+)/i);
@@ -665,11 +760,14 @@ function processMessages() {
     });
 }
 
-        function formatString(str) {
-    return str.trim() // Xóa khoảng trắng ở đầu và cuối chuỗi
-        .replace(/\s+/g, '-') // Thay thế tất cả khoảng trắng bằng dấu gạch ngang
-        .replace(/[^\w-]/g, '-') // Thay tất cả ký tự không phải chữ cái, số hoặc gạch ngang bằng dấu gạch ngang
-        .toLowerCase(); // Chuyển tất cả về chữ thường
+function cleanString(inputString) {
+    // Thay thế tất cả khoảng trắng bằng dấu "-"
+    let replacedString = inputString.replace(/\s+/g, '-');
+    // Xóa tất cả ký tự đặc biệt ngoại trừ "-"
+    let cleanedString = replacedString.replace(/[^a-zA-Z0-9-]/g, '');
+    // Thay thế các dấu "-" liên tiếp bằng một dấu "-"
+    let finalString = cleanedString.replace(/-+/g, '-');
+    return finalString;
 }
     </script>
 

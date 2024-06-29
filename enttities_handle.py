@@ -224,7 +224,7 @@ def predict(sentence, model, tokenizer, device):
     }
   
     
-    return json.dumps(prediction_result, indent=4)
+    return prediction_result
     
 
 
@@ -236,6 +236,47 @@ def add_to_cart_handle(data,cnx):
     missing_info = []
     if not data['entities'].get('name'):
         missing_info.append("name")
+    else:
+        value=data['entities']['name']
+    
+        query = """
+        SELECT
+        p.ID, p.post_title, pm2.meta_value AS url_img
+        FROM
+            wp_posts p
+        JOIN
+            wp_postmeta pm ON p.ID = pm.post_id
+        LEFT JOIN
+            wp_postmeta pm2 ON pm.meta_value = pm2.post_id AND pm2.meta_key = '_wp_attached_file'
+        WHERE
+        p.post_type ='product'
+        AND pm.meta_key = '_thumbnail_id'
+            
+              
+        """
+        query+=" and p.post_title LIKE '%"+value+"%';"
+    
+        # Thêm các điều kiện tìm kiếm dựa trên biến
+        
+        print(query)
+    
+        # Use dictionary cursor to ease JSON conversion
+        cursor = cnx.cursor(dictionary=True)
+    
+        try:
+            # Execute the query
+            cursor.execute(query)
+            # Fetch all the rows
+            results = cursor.fetchall()
+        except Exception as e:
+            print("Database error:", e)
+            results = []
+        if results==[]:
+            result={
+            "message":"We don't have the shoe "+data['entities'].get('name', ''),
+            "type":"errol"
+            }
+            return result
     if not data['entities'].get('color'):
         missing_info.append("color")
     if not data['entities'].get('size'):
@@ -244,10 +285,11 @@ def add_to_cart_handle(data,cnx):
         missing_info_message = "Please provide information about " + ", ".join(missing_info)
         result={
             "message":missing_info_message,
-            "type":"message"
+            "type":"errol"
         }
-        return json.dumps(result)
+        return result
     else:
+        
         name = data['entities'].get('name', '')
         color = data['entities'].get('color', '')
         size = data['entities'].get('size', 0)  # Giá trị mặc định là 0 nếu không tồn tại
@@ -285,14 +327,18 @@ def add_to_cart_handle(data,cnx):
         #Sử dụng f-string và chuyển đổi size thành chuỗi khi cần ghép nối
         if(results==[]):
             message = f"I don't have any shoe to add  for the shoe {str(name)}, {color} color, size {str(size)}"
-    
-        result={
+            result={
             "message":message,
-            "type":"add success",
-            "data":results
-        }
+            "type":"errol"
+            }
+        else:
+            result={
+                "message":message,
+                "type":"add success",
+                "data":results
+            }
     
-        return json.dumps(result)
+        return result
 
 # def find_products(data,cnx):
 #     res = " , ".join([f"{key} is '{value}'" for key, value in data['entities'].items()])
@@ -368,6 +414,70 @@ def find_products(data, cnx):
     # """
     query = """
     SELECT
+    p.post_parent
+    FROM
+        wp_posts p
+    JOIN
+        wp_term_relationships tr ON p.post_parent = tr.object_id
+    JOIN
+        wp_term_taxonomy tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
+    JOIN
+        wp_terms t ON tt.term_id = t.term_id
+    WHERE
+        p.post_type = 'product_variation'
+        AND tt.taxonomy = 'product_cat'
+        
+       
+
+    """
+
+    # Thêm các điều kiện tìm kiếm dựa trên biến
+    if data['entities'].get('name') is not None and data['entities'].get('category') is not None:
+        query+= "AND ("+"( p.post_title LIKE '%"+data['entities'].get('name')+"%' and t.name LIKE '%"+data['entities'].get('category')+"%')"+ " OR "+ "p.post_title LIKE '%"+data['entities'].get('name')+"%' OR t.name LIKE '%"+data['entities'].get('category')+"%')"
+    else:
+        conditions = []
+        for key, value in data['entities'].items():
+            if value:
+                if(key=="category"):
+                   conditions.append(f"t.name LIKE '%{value}%'") 
+                else:
+                    conditions.append(f"p.post_title LIKE '%{value}%'")
+
+       
+        if conditions:
+            
+            for condition in conditions:
+                query += " AND " + condition
+
+    
+               
+    query +="group by  p.post_parent"
+    
+
+
+    # if conditions:
+    #     query += " AND " + " AND ".join(conditions)
+    
+    
+    print(query)
+
+    # Use dictionary cursor to ease JSON conversion
+    cursor = cnx.cursor(dictionary=True)
+
+    try:
+        # Execute the query
+        cursor.execute(query)
+        # Fetch all the rows
+        results = cursor.fetchall()
+    except Exception as e:
+        print("Database error:", e)
+        results = []
+    print(results)
+    unique_ids = list(set(item['post_parent'] for item in results))
+    
+    id_string = f"({', '.join(map(str, unique_ids))})"
+   
+    query="""SELECT
         p.ID, p.post_title,
         pl.sku, pl.min_price, pl.max_price, pl.onsale,
         pl.stock_quantity, pl.stock_status, pl.rating_count, pl.average_rating, pl.total_sales,
@@ -381,24 +491,66 @@ def find_products(data, cnx):
     LEFT JOIN
         wp_postmeta pm2 ON pm.meta_value = pm2.post_id AND pm2.meta_key = '_wp_attached_file'
     WHERE
-        (p.post_type = 'product' OR p.post_type = 'product_variation')
+        p.post_type = 'product' 
         AND pm2.meta_value IS NOT NULL
         AND pm.meta_key = '_thumbnail_id'
+        
+        """
+    query+= "AND p.ID in "+ str(id_string)+";"
+    try:
+        # Execute the query
+        cursor.execute(query)
+        # Fetch all the rows
+        results = cursor.fetchall()
+    except Exception as e:
+        print("Database error:", e)
+        results = []
+    result = {
+        "message": message,
+        "type": "product_list",
+        "data": results
+    }
+    print(result)
+    # Output the final result as a formatted JSON string
+    json_output = result
+    return json_output
 
+def checkoutHandle(data):
+    result = {
+        "message": "Redirect to the checkout page",
+        "type": "redirect",
+        "data": "checkout"
+    }
+
+    # Output the final result as a formatted JSON string
+    #json_output = json.dumps(result, default=custom_json_serializer, ensure_ascii=False, indent=4)
+    return result
+    
+def find_product(data, cnx):
+    # Generate a descriptive message from entities
+
+    value=data['entities']['name']
+    
+    query = """
+    SELECT
+    p.ID, p.post_title, pm2.meta_value AS url_img
+    FROM
+        wp_posts p
+    JOIN
+        wp_postmeta pm ON p.ID = pm.post_id
+    LEFT JOIN
+        wp_postmeta pm2 ON pm.meta_value = pm2.post_id AND pm2.meta_key = '_wp_attached_file'
+    WHERE
+    p.post_type ='product'
+    AND pm.meta_key = '_thumbnail_id'
+        
+          
     """
+    query+=" and p.post_title LIKE '%"+value+"%';"
 
     # Thêm các điều kiện tìm kiếm dựa trên biến
-    conditions = []
-    for key, value in data['entities'].items():
-        if value:
-            conditions.append(f"p.post_title LIKE '%{value}%'")
     
-
-    if conditions:
-        query += " AND " + " AND ".join(conditions)
-
-    query += " LIMIT 5;"
-   
+    print(query)
 
     # Use dictionary cursor to ease JSON conversion
     cursor = cnx.cursor(dictionary=True)
@@ -411,27 +563,51 @@ def find_products(data, cnx):
     except Exception as e:
         print("Database error:", e)
         results = []
-
+    print(results)
+    query="""
+    SELECT 
+      Color,
+      GROUP_CONCAT(DISTINCT Size ORDER BY Size) AS Sizes
+    FROM
+      (SELECT 
+         p.ID, 
+         MAX(CASE WHEN pm.meta_key = 'attribute_pa_color' THEN pm.meta_value END) AS Color,
+         MAX(CASE WHEN pm.meta_key = 'attribute_pa_size' THEN pm.meta_value END) AS Size
+       FROM wp_posts AS p
+       JOIN wp_postmeta AS pm ON p.ID = pm.post_id
+       WHERE (pm.meta_key = 'attribute_pa_color' OR pm.meta_key = 'attribute_pa_size')
+       
+        """
+    query+= " AND (p.id = "+ str(results[0]["ID"]) +" OR p.post_parent = "+str(results[0]["ID"])+" )"
+    query+=""" GROUP BY p.ID
+      ) AS subquery
+    GROUP BY Color
+    ORDER BY Color;"""
+    print(query)
+    try:
+        # Execute the query
+        cursor.execute(query)
+        # Fetch all the rows
+        result1 = cursor.fetchall()
+    except Exception as e:
+        print("Database error:", e)
+        result1 = []
     result = {
-        "message": message,
-        "type": "product_list",
-        "data": results
+        "message": "This is all size and color of the shoe",
+        "type": "product_info",
+        "data": {
+            "title": (results[0]["post_title"]),
+            "url_img":(results[0]["url_img"]),
+            "info":result1
+
+        }
     }
-
+    print(result)
     # Output the final result as a formatted JSON string
-    json_output = json.dumps(result, default=custom_json_serializer, ensure_ascii=False, indent=4)
+    json_output = result
     return json_output
-
-def checkoutHandle(data):
-    result = {
-        "message": "Redirect to the checkout page",
-        "type": "redirect",
-        "data": "checkout"
-    }
-
-    # Output the final result as a formatted JSON string
-    json_output = json.dumps(result, default=custom_json_serializer, ensure_ascii=False, indent=4)
-    return json_output
+   
+    
     
 
 
