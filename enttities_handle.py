@@ -473,6 +473,13 @@ def find_products(data, cnx):
         print("Database error:", e)
         results = []
     print(results)
+    if results ==[]:
+        result = {
+        "message": "We don't have this shoe",
+        "type": "message",
+        "data": ""
+         }
+        return result
     unique_ids = list(set(item['post_parent'] for item in results))
     
     id_string = f"({', '.join(map(str, unique_ids))})"
@@ -528,7 +535,14 @@ def checkoutHandle(data):
     
 def find_product(data, cnx):
     # Generate a descriptive message from entities
+    if not data['entities'].get('name'):
+        result = {
+        "message": "please give me shoe name",
+        "type": "message",
+        "data": ""
 
+        }    
+        return result
     value=data['entities']['name']
     
     query = """
@@ -563,7 +577,15 @@ def find_product(data, cnx):
     except Exception as e:
         print("Database error:", e)
         results = []
+    if results ==[]:
+        result = {
+        "message": "We don't have this shoe",
+        "type": "message",
+        "data": ""
+         }
+        return result
     print(results)
+    
     query="""
     SELECT 
       Color,
@@ -601,6 +623,74 @@ def find_product(data, cnx):
             "info":result1
 
         }
+    }
+    print(result)
+    # Output the final result as a formatted JSON string
+    json_output = result
+    return json_output
+
+def find_order(data, cnx):
+    if not data['entities'].get('orderID'):
+        result = {
+        "message": "please give me your order ID",
+        "type": "message",
+        "data": ""
+
+        }    
+        return result
+    value=data['entities']['order']
+    
+    query = """
+    SELECT 
+    posts.ID AS order_id,
+    posts.post_date AS order_date,
+    MAX(CASE WHEN meta.meta_key = '_billing_first_name' THEN meta.meta_value END) AS billing_first_name,
+    MAX(CASE WHEN meta.meta_key = '_billing_last_name' THEN meta.meta_value END) AS billing_last_name,
+    MAX(CASE WHEN meta.meta_key = '_billing_address_1' THEN meta.meta_value END) AS billing_address_1,
+    MAX(CASE WHEN meta.meta_key = '_billing_address_2' THEN meta.meta_value END) AS billing_address_2,
+    MAX(CASE WHEN meta.meta_key = '_billing_city' THEN meta.meta_value END) AS billing_city,
+    MAX(CASE WHEN meta.meta_key = '_billing_state' THEN meta.meta_value END) AS billing_state,
+    MAX(CASE WHEN meta.meta_key = '_billing_postcode' THEN meta.meta_value END) AS billing_postcode,
+    MAX(CASE WHEN meta.meta_key = '_billing_country' THEN meta.meta_value END) AS billing_country,
+    MAX(CASE WHEN meta.meta_key = '_billing_email' THEN meta.meta_value END) AS billing_email,
+    MAX(CASE WHEN meta.meta_key = '_billing_phone' THEN meta.meta_value END) AS billing_phone,
+    item.order_item_name AS product_name
+    FROM wp_posts AS posts
+    LEFT JOIN wp_postmeta AS meta ON posts.ID = meta.post_id
+    LEFT JOIN wp_woocommerce_order_items AS item ON posts.ID = item.order_id
+    LEFT JOIN wp_woocommerce_order_itemmeta AS itemmeta ON item.order_item_id = itemmeta.order_item_id
+    WHERE posts.post_type = 'shop_order'
+          
+          
+        
+          
+    """
+    query+=" AND posts.ID = "+value
+    query+= """ AND item.order_item_type = 'line_item'
+    GROUP BY item.order_item_id;"""
+    # Thêm các điều kiện tìm kiếm dựa trên biến
+    
+    print(query)
+
+    # Use dictionary cursor to ease JSON conversion
+    cursor = cnx.cursor(dictionary=True)
+
+    try:
+        # Execute the query
+        cursor.execute(query)
+        # Fetch all the rows
+        results = cursor.fetchall()
+    except Exception as e:
+        print("Database error:", e)
+        results = []
+    print(results)
+    
+    result = {
+        "message": "This is orther information",
+        "type": "product_info",
+        "data": results
+
+        
     }
     print(result)
     # Output the final result as a formatted JSON string

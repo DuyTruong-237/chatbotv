@@ -27,7 +27,7 @@ from functools import partial
 from load_model import (load_chatbot_model,load_model_and_tokenizer_entities, load_token_classification_model, 
                           load_image_classification_model, load_question_classification_model,load_model_vn,extract_json_info_vn,create_df_vn,load_json_file_vn,load_dataset_vn)
 from support_handle import (chat, load_json_file, create_df,extract_json_info)
-from enttities_handle import (checkoutHandle,predict,add_to_cart_handle,find_product,find_products)
+from enttities_handle import (checkoutHandle,predict,add_to_cart_handle,find_product,find_products,find_order)
 from cnn_handle import (find_similar_images, extract_features,load_and_preprocess_image, preprocess_and_extract_features,findImage)
 from classify_handle import (classify_question_with_model)
 from vn_handle import (classify_question_vn)
@@ -37,7 +37,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 chatbot_model_path = "./model/support"
 token_classification_model_path = './model/best_model_state2.bin'
 image_classification_model_path = './model/model1.h5'
-question_classification_model_path = './model/Classify2'
+question_classification_model_path = './model/Classify1'
 model_path_vn = "./model/VN_Support1"
 filename_vn = './model/vn_intend.json'
 # Load các mô hình
@@ -126,20 +126,22 @@ def custom_json_serializer(obj):
     raise TypeError(f"Object of type {obj.__class__.__name__} is not JSON serializable")
 def goHandle(data):
 
-        if(data['intent'][0]==2):
-            if(data['intent'][-1]==0):
+        if(data['intent'][0]==0):
+            if(data['intent'][-1]==6):
                 return find_product(data,cnx)
-
+            
             return add_to_cart_handle(data,cnx)
         else:
-            if(data['intent'][-1]==2):
+            if(data['intent'][-1]==0):
                 return add_to_cart_handle(data,cnx)
-            elif(data['intent'][-1]==5):
+            elif(data['intent'][-1]==3):
                 return find_products(data,cnx)
-            elif(data['intent'][-1]==8):
+            elif(data['intent'][-1]==4):
                 return checkoutHandle(data)
-            elif(data['intent'][-1]==0):
+            elif(data['intent'][-1]==6):
                 return find_product(data,cnx)
+            elif(data['intent'][-1]==2):
+                return find_order(data,cnx)
             else:
                 return find_products(data,cnx)
         # if (len(data['intent'])>1):
@@ -185,6 +187,9 @@ async def classify_question(websocket, path):
                 current_session_entities['name'] = entities.get('name', current_session_entities.get('name'))
                 current_session_entities['size'] = entities.get('size', current_session_entities.get('size'))
                 current_session_entities['price'] = entities.get('price', current_session_entities.get('price'))
+                current_session_entities['order'] = entities.get('order', current_session_entities.get('order'))
+
+                
                 print(sessions_data[session_id])
                 response= goHandle(sessions_data[session_id])
                 print("ttttt")
