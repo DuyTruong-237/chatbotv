@@ -133,7 +133,7 @@
         }
 
         #chatbotContainer #chatLog .reply {
-            background: #b9b8b8;
+            background: #dfdddd;
             color: #000000;
         }
 
@@ -159,7 +159,7 @@
             background: rgb(20, 223, 230);
             width: 100%;
             display: flex;
-            height: 100px;
+            height: 80px;
             -webkit-box-align: center;
             align-items: center;
             border-radius: 10px 10px 0 0;
@@ -207,7 +207,7 @@
             background: #69de40;
         }
 
-        .product {
+        .productc {
             border: 1px solid #d3d3d3;
             background-color: #f1f1f1;
             margin-bottom: 10px;
@@ -226,24 +226,24 @@ margin-right:10px;
      font-weight: 800;
     font-size: 0.9rem;
         }
-.product td,th,tr,table{
+.productc td,th,tr,table{
             color: #000;
 boder:grey;
         }
 
-        .product img {
+        .productc img {
             border-radius: 10px;
             margin-right: 10px;
 
         }
 
-        .product .info {
+        .productc .info {
             display: flex;
             flex-direction: column;
             max-width: 300px;
         }
 
-        .product .name {
+        .productc .name {
             font-weight: bold;
             margin-bottom: 5px;
             overflow: hidden;
@@ -256,7 +256,7 @@ boder:grey;
             height: 2.4em;
         }
 
-        .product .price {
+        .productc .price {
             color: #ff0000;
             font-weight: bold;
         }
@@ -268,7 +268,7 @@ boder:grey;
             background-color: white;
         }
 
-        .product .buttons {
+        .productc .buttons {
             display: none;
             position: absolute;
             top: 50%;
@@ -278,7 +278,7 @@ boder:grey;
             gap: 5px;
         }
 
-        .product .button {
+        .productc .button {
             padding: 5px 10px;
             background-color: #0066ff;
             color: #fff;
@@ -288,7 +288,7 @@ boder:grey;
             text-align: center;
         }
 
-        .product:hover .buttons {
+        .productc:hover .buttons {
             display: flex;
         }
         .image{
@@ -612,7 +612,7 @@ boder:grey;
             }
 
             var productHTML = document.createElement('div');
-            productHTML.classList.add('product');
+            productHTML.classList.add('productc');
 
             var productLink = document.createElement('a');
             productLink.href = "http://localhost/e-commerce-ai/product/" + cleanString(product.post_title);
@@ -674,7 +674,7 @@ boder:grey;
 
             if (response.type === "product_info") {
         const productContainer = document.createElement('div');
-        productContainer.classList.add('product');
+        productContainer.classList.add('productc');
         const productContainer1 = document.createElement('div');
         productContainer1.classList.add('product1');
         const productTitle = document.createElement('div');
