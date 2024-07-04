@@ -84,10 +84,10 @@ class DecimalEncoder(JSONEncoder):
 # Replace the below connection parameters with your details
 config = {
     'user': 'root',
-    'password': 'root',
+    'password': '',
     'host': 'localhost',
-    'database': 'shop4',
-    'port': 3308,
+    'database': 'webai3',
+    'port': 3306,
     'raise_on_warnings': True
 }
 try:
